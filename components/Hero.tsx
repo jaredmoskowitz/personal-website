@@ -6,11 +6,13 @@ import { JARED } from '@/lib/data';
 
 interface Commit  { repo: string; msg: string; sha: string; when: string; }
 interface Article { title: string; source: string; date: string; url?: string; }
+interface ListenEvent { type: string; text: string; source: string; time: string; }
 
 export default function Hero() {
   const J = JARED;
-  const [commits, setCommits] = useState<Commit[]>(JARED.commits as unknown as Commit[]);
-  const [reading, setReading] = useState<Article[]>(JARED.reading as unknown as Article[]);
+  const [commits,   setCommits  ] = useState<Commit[]>(JARED.commits as unknown as Commit[]);
+  const [reading,   setReading  ] = useState<Article[]>(JARED.reading as unknown as Article[]);
+  const [lastPlayed, setLastPlayed] = useState<ListenEvent | null>(null);
 
   useEffect(() => {
     fetch('/api/commits')
@@ -23,6 +25,16 @@ export default function Hero() {
     fetch('/api/reading')
       .then(r => r.json())
       .then((d: { reading: Article[] }) => { if (d.reading?.length) setReading(d.reading); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/events')
+      .then(r => r.json())
+      .then((d: { events: ListenEvent[] }) => {
+        const ev = d.events?.find(e => e.type === 'music' || e.type === 'playing' || e.type === 'podcast');
+        if (ev) setLastPlayed(ev);
+      })
       .catch(() => {});
   }, []);
 
@@ -54,7 +66,7 @@ export default function Hero() {
             {J.intro.long}
           </p>
           <div style={{ marginTop: 24, display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 14 }}>
-            <a className="tm-link" href={`mailto:${J.email}`}>{J.email}</a>
+            <a className="tm-link" href={`https://${J.social.linkedin}`} target="_blank" rel="noopener">linkedin</a>
             <a className="tm-link" href={`https://${J.social.github}`} target="_blank" rel="noopener">{J.social.github}</a>
             <a className="tm-link" href={`https://${J.social.twitter}`} target="_blank" rel="noopener">{J.social.twitter}</a>
           </div>
@@ -104,20 +116,20 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Latest deploy */}
-          <div className="tm-card" style={{ padding: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span className="tm-soft" style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase' }}>latest deploy</span>
-              <span style={{ flex: 1 }} />
-              <span className="tm-soft" style={{ fontSize: 11 }}>{J.events.find(e => e.type === 'deploy')?.time}</span>
+          {/* Last listened */}
+          {lastPlayed && (
+            <div className="tm-card" style={{ padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span className="tm-soft" style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                  {lastPlayed.type === 'podcast' ? 'listening to' : 'last played'}
+                </span>
+                <span style={{ flex: 1 }} />
+                <span className="tm-soft" style={{ fontSize: 11 }}>{lastPlayed.time}</span>
+              </div>
+              <div className="tm-ink" style={{ fontSize: 14, lineHeight: 1.5 }}>{lastPlayed.text}</div>
+              <div className="tm-dim" style={{ fontSize: 12.5, marginTop: 4 }}>{lastPlayed.source}</div>
             </div>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: 'var(--body)' }}>
-              {J.events.find(e => e.type === 'deploy')?.text}
-            </p>
-            <div className="tm-acc" style={{ marginTop: 8, fontSize: 12 }}>
-              {J.events.find(e => e.type === 'deploy')?.source}
-            </div>
-          </div>
+          )}
 
           {/* Just read */}
           <div className="tm-card" style={{ padding: 18 }}>
