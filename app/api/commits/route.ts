@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { getData } from '@/lib/storage';
 
 const GITHUB_USER = 'jaredmoskowitz';
-const BACKFILL_PATH = path.join(process.cwd(), 'data', 'commits.json');
 
 export interface Commit {
   repo: string;
@@ -28,16 +26,8 @@ function relativeTime(dateStr: string): string {
   return `${diffW}w ago`;
 }
 
-function loadBackfill(): Commit[] {
-  try {
-    return JSON.parse(fs.readFileSync(BACKFILL_PATH, 'utf-8')) as Commit[];
-  } catch {
-    return [];
-  }
-}
-
 export async function GET() {
-  const backfill = loadBackfill();
+  const backfill = await getData<Commit>('commits');
 
   let githubCommits: Commit[] = [];
   try {
@@ -77,8 +67,6 @@ export async function GET() {
     // GitHub unreachable — backfill only
   }
 
-  // Merge: backfill covers private repos; GitHub covers public real-time.
-  // Deduplicate by SHA prefix, sort by date descending.
   const seenShas = new Set<string>();
   const merged = [...githubCommits, ...backfill]
     .filter(c => {
@@ -89,7 +77,7 @@ export async function GET() {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 20)
-    .map(({ date, ...rest }) => ({ ...rest, when: rest.when || relativeTime(date) })); // compute when from date for backfill entries
+    .map(({ date, ...rest }) => ({ ...rest, when: rest.when || relativeTime(date) }));
 
   return NextResponse.json({ commits: merged });
 }

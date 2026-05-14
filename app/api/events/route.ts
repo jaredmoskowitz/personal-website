@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { getData } from '@/lib/storage';
 
 export interface LiveEvent {
-  type:     string;
-  sha?:     string;
-  text:     string;
-  source:   string;
-  time:     string;
-  status?:  string;
-  date:     string; // ISO — for internal sorting
+  type:    string;
+  sha?:    string;
+  text:    string;
+  source:  string;
+  time:    string;
+  status?: string;
+  date:    string; // ISO — for internal sorting
 }
 
 function relativeTime(dateStr: string): string {
@@ -27,21 +26,11 @@ function relativeTime(dateStr: string): string {
   return `${diffW}w ago`;
 }
 
-function readJson<T>(filePath: string): T[] {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T[];
-  } catch {
-    return [];
-  }
-}
-
 export async function GET() {
-  const dataDir = path.join(process.cwd(), 'data');
-
-  // ── commits ──────────────────────────────────────────────────────────────
-  const storedCommits = readJson<{
+  // ── commits ─────────────────────────────────────────────────────────────────
+  const storedCommits = await getData<{
     repo: string; msg: string; sha: string; date: string;
-  }>(path.join(dataDir, 'commits.json'));
+  }>('commits');
 
   let githubCommits: typeof storedCommits = [];
   try {
@@ -95,10 +84,10 @@ export async function GET() {
       date:   c.date,
     }));
 
-  // ── deploys ───────────────────────────────────────────────────────────────
-  const deployEvents: LiveEvent[] = readJson<{
+  // ── deploys ─────────────────────────────────────────────────────────────────
+  const deployEvents: LiveEvent[] = (await getData<{
     project: string; sha: string; msg: string; status: string; date: string;
-  }>(path.join(dataDir, 'deploys.json')).map(d => ({
+  }>('deploys')).map(d => ({
     type:   'deploy',
     sha:    d.sha,
     text:   `${d.project}@${d.sha} → vercel`,
@@ -108,20 +97,39 @@ export async function GET() {
     date:   d.date,
   }));
 
-  // ── reading ───────────────────────────────────────────────────────────────
-  const readingEvents: LiveEvent[] = readJson<{
-    title: string; source: string; date: string;
-  }>(path.join(dataDir, 'reading.json')).map(r => ({
+  // ── reading ─────────────────────────────────────────────────────────────────
+  const readingEvents: LiveEvent[] = (await getData<{
+    title: string; source: string; date: string; ts?: string;
+  }>('reading')).map(r => ({
     type:   'reading',
     text:   r.title,
     source: r.source,
-    time:   r.date, // already human-readable from reading route
-    date:   r.date,
+    time:   r.ts ? relativeTime(r.ts) : r.date,
+    date:   r.ts ?? r.date,
   }));
 
-  const all = [...commitEvents, ...deployEvents, ...readingEvents]
+  // ── music ────────────────────────────────────────────────────────────────────
+  const musicRaw = await getData<{ artist: string; track: string; album: string; ts: string }>('music');
+  const musicEvents: LiveEvent[] = musicRaw.slice(0, 5).map(t => ({
+    type:   'music',
+    text:   `${t.track} — ${t.artist}`,
+    source: t.album || t.artist,
+    time:   relativeTime(t.ts),
+    date:   t.ts,
+  }));
+
+  // ── podcasts ─────────────────────────────────────────────────────────────────
+  const podcastRaw = await getData<{ show: string; episode: string; ts: string }>('podcasts');
+  const podcastEvents: LiveEvent[] = podcastRaw.slice(0, 3).map(e => ({
+    type:   'podcast',
+    text:   e.episode,
+    source: e.show,
+    time:   relativeTime(e.ts),
+    date:   e.ts,
+  }));
+
+  const all = [...commitEvents, ...deployEvents, ...readingEvents, ...musicEvents, ...podcastEvents]
     .sort((a, b) => {
-      // reading dates are human strings like "May 11"; sort those to bottom
       const da = new Date(a.date).getTime();
       const db = new Date(b.date).getTime();
       if (isNaN(da) && isNaN(db)) return 0;

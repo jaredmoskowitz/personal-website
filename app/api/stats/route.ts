@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { getData } from '@/lib/storage';
 
 const GITHUB_USER = 'jaredmoskowitz';
 
@@ -9,13 +8,18 @@ export interface StatCard {
   label: string;
 }
 
-function commitCountThisMonth(commitsPath: string): number {
+interface StoredCommit { date: string }
+interface AgentStats {
+  sessions_this_month: number;
+  turns_this_month:    number;
+  avg_turns:           number;
+  top_project:         string;
+}
+
+async function commitCountThisMonth(): Promise<number> {
   try {
-    const commits: Array<{ date: string }> = JSON.parse(
-      fs.readFileSync(commitsPath, 'utf-8')
-    );
-    const now   = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const commits = await getData<StoredCommit>('commits');
+    const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
     return commits.filter(c => new Date(c.date).getTime() >= start).length;
   } catch {
     return 0;
@@ -23,10 +27,7 @@ function commitCountThisMonth(commitsPath: string): number {
 }
 
 export async function GET() {
-  const dataDir     = path.join(process.cwd(), 'data');
-  const commitsPath = path.join(dataDir, 'commits.json');
-
-  const localMonthCount = commitCountThisMonth(commitsPath);
+  const localMonthCount = await commitCountThisMonth();
 
   let publicRepos   = 0;
   let githubMonthly = 0;
@@ -48,7 +49,6 @@ export async function GET() {
       publicRepos = user.public_repos ?? 0;
     }
 
-    // Count push events in the last 30 days from public activity
     const eventsRes = await fetch(
       `https://api.github.com/users/${GITHUB_USER}/events/public?per_page=100`,
       {
@@ -80,11 +80,15 @@ export async function GET() {
 
   const monthlyCount = Math.max(localMonthCount, githubMonthly);
 
+  // Agent stats (populated by sync script)
+  const agentStats = await getData<AgentStats>('agent-stats');
+  const agent = agentStats[0];
+
   const stats: StatCard[] = [
-    { n: monthlyCount || '—', label: 'commits this month' },
-    { n: publicRepos  || '—', label: 'public repos' },
-    { n: 4,                   label: 'apps shipped' },
-    { n: 13,                  label: 'years building' },
+    { n: monthlyCount || '—',                label: 'commits this month' },
+    { n: publicRepos  || '—',                label: 'public repos' },
+    { n: agent?.sessions_this_month || '—',  label: 'AI sessions this month' },
+    { n: agent?.turns_this_month    || '—',  label: 'AI turns this month' },
   ];
 
   return NextResponse.json({ stats }, { headers: { 'Cache-Control': 'public, s-maxage=3600' } });

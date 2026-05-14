@@ -209,6 +209,11 @@ def is_article(url: str, raw_title: str, hostname: str, path: str) -> "tuple[boo
     if parsed.scheme not in ("http", "https"):
         return False, "non-http"
 
+    # ── Local dev servers ─────────────────────────────────────────────────────
+    host_only = hostname.split(":")[0]
+    if host_only in ("localhost", "127.0.0.1", "0.0.0.0", "::1") or host_only.endswith(".local"):
+        return False, "local host"
+
     # ── Domain blocklist ──────────────────────────────────────────────────────
     bare = hostname.removeprefix("www.")
     if bare in BLOCKED_DOMAINS or hostname in BLOCKED_DOMAINS:
