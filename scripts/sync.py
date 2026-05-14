@@ -706,6 +706,7 @@ def main():
 if __name__ == "__main__":
     # Make urllib.parse available at module level for Spotify
     import urllib.parse
+
     if "--spotify" in sys.argv:
         # Lightweight spotify-only run (no lock, no full output)
         state = load_state()
@@ -714,5 +715,46 @@ if __name__ == "__main__":
             print(f"spotify: +{added} tracks")
             state["last_run_spotify"] = datetime.datetime.utcnow().isoformat() + "Z"
             save_state(state)
+
+    elif "--deploy" in sys.argv:
+        # Record a manual deploy: activity --deploy <project> [msg]
+        # e.g. activity --deploy todaydailyfocus.com "Today v1.3 → production"
+        idx = sys.argv.index("--deploy")
+        if idx + 1 >= len(sys.argv):
+            print("Usage: activity --deploy <project-or-url> [message]")
+            sys.exit(1)
+        project = sys.argv[idx + 1]
+        msg     = sys.argv[idx + 2] if idx + 2 < len(sys.argv) else f"deploy → {project}"
+
+        # Try to get HEAD sha + commit message from the current repo
+        import subprocess
+        sha = ""
+        try:
+            sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"],
+                                          stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            pass
+
+        payload = {
+            "project": project,
+            "sha":     sha,
+            "msg":     msg,
+            "branch":  "main",
+            "status":  "ok",
+            "url":     project if project.startswith("http") else f"https://{project}",
+            "date":    datetime.datetime.utcnow().isoformat() + "Z",
+        }
+        body    = json.dumps(payload).encode()
+        req_obj = urllib.request.Request(
+            f"{API_BASE}/api/deploys?manual=1", data=body, method="POST"
+        )
+        req_obj.add_header("Content-Type", "application/json")
+        req_obj.add_header("Authorization", f"Bearer {SECRET}")
+        try:
+            with urllib.request.urlopen(req_obj, timeout=15) as resp:
+                print(f"✓  recorded deploy: {project} ({sha or 'no sha'})")
+        except Exception as e:
+            print(f"  failed to record deploy: {e}")
+
     else:
         main()

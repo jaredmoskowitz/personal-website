@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getData, setData } from '@/lib/storage';
 
-const WEBHOOK_SECRET = process.env.VERCEL_WEBHOOK_SECRET;
+const WEBHOOK_SECRET  = process.env.VERCEL_WEBHOOK_SECRET;
+const MANUAL_SECRET   = process.env.READING_SECRET;
 
 export interface Deploy {
   project: string;
@@ -19,10 +20,32 @@ export async function GET() {
   return NextResponse.json({ deploys: deploys.slice(0, 20) });
 }
 
+// POST /api/deploys?manual=1 — manual deploy recording (uses READING_SECRET).
 // POST /api/deploys — Vercel webhook receiver.
 // Configure in Vercel project settings → Webhooks → add URL + copy signing secret → VERCEL_WEBHOOK_SECRET env var.
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
+
+  // Manual path — authenticated by READING_SECRET, bypasses HMAC
+  if (req.nextUrl.searchParams.get('manual') === '1') {
+    const auth = req.headers.get('authorization');
+    if (!MANUAL_SECRET || auth !== `Bearer ${MANUAL_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const body = JSON.parse(rawBody) as Partial<Deploy>;
+    const deploy: Deploy = {
+      project: body.project ?? 'unknown',
+      sha:     body.sha ?? '',
+      msg:     body.msg ?? '',
+      branch:  body.branch ?? 'main',
+      status:  body.status ?? 'ok',
+      url:     body.url ?? '',
+      date:    body.date ?? new Date().toISOString(),
+    };
+    const existing = await getData<Deploy>('deploys');
+    await setData('deploys', [deploy, ...existing].slice(0, 100));
+    return NextResponse.json({ ok: true });
+  }
 
   if (WEBHOOK_SECRET) {
     const sig      = req.headers.get('x-vercel-signature') ?? '';
