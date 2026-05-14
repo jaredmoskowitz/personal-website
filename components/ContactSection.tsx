@@ -6,24 +6,21 @@ export default function ContactSection() {
 
   return (
     <section id="tm-contact" className="tm-section" style={{ marginBottom: 32 }}>
-      <CmdLine>{`open linkedin && exit`}</CmdLine>
+      <CmdLine>{`open mail && exit`}</CmdLine>
       <div style={{ marginTop: 28 }}>
         <div style={{ fontSize: 36, letterSpacing: '-0.02em', fontWeight: 600 }}>
           <a
             className="tm-link"
-            href={`https://${J.social.linkedin}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`mailto:${J.email}`}
             style={{ color: 'var(--accent)', borderBottomColor: 'var(--accent)' }}
           >
-            linkedin ↗
+            {J.email} ↗
           </a>
         </div>
         <p style={{ marginTop: 18, color: 'var(--body)', fontSize: 15, maxWidth: 620, lineHeight: 1.7 }}>
           For work, collaborations, or anything you'd ordinarily DM.
         </p>
         <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 22, fontSize: 14 }}>
-          <a className="tm-link" href={`mailto:${J.email}`}>{J.email}</a>
           <a className="tm-link" href={`https://${J.social.github}`} target="_blank" rel="noopener">{J.social.github}</a>
           <a className="tm-link" href={`https://${J.social.linkedin}`} target="_blank" rel="noopener">{J.social.linkedin}</a>
           <a className="tm-link" href={`https://${J.social.twitter}`} target="_blank" rel="noopener">{J.social.twitter}</a>
