@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getData } from '@/lib/storage';
 
+const REPO_ALIASES: Record<string, string> = {
+  vault: 'sesh',
+};
+
 export interface LiveEvent {
   type:    string;
   sha?:    string;
@@ -54,14 +58,16 @@ export async function GET() {
       }> = await res.json();
       githubCommits = events
         .filter(e => e.type === 'PushEvent' && e.payload.commits?.length)
-        .flatMap(e =>
-          (e.payload.commits || []).map(c => ({
-            repo: e.repo.name,
+        .flatMap(e => {
+          const repoSlug = e.repo.name.split('/')[1] ?? e.repo.name;
+          const repoName = `${e.repo.name.split('/')[0]}/${REPO_ALIASES[repoSlug] ?? repoSlug}`;
+          return (e.payload.commits || []).map(c => ({
+            repo: repoName,
             msg:  c.message.split('\n')[0].slice(0, 80),
             sha:  c.sha.slice(0, 7),
             date: e.created_at,
-          }))
-        );
+          }));
+        });
     }
   } catch {
     // GitHub unreachable
