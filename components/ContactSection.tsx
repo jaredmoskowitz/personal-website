@@ -23,6 +23,7 @@ export default function ContactSection() {
           For work, collaborations, or anything you'd ordinarily DM.
         </p>
         <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 22, fontSize: 14 }}>
+          <a className="tm-link" href={`mailto:${J.email}`}>{J.email}</a>
           <a className="tm-link" href={`https://${J.social.github}`} target="_blank" rel="noopener">{J.social.github}</a>
           <a className="tm-link" href={`https://${J.social.linkedin}`} target="_blank" rel="noopener">{J.social.linkedin}</a>
           <a className="tm-link" href={`https://${J.social.twitter}`} target="_blank" rel="noopener">{J.social.twitter}</a>

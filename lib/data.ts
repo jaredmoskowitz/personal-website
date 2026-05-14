@@ -3,7 +3,7 @@ export const JARED = {
   role: "Senior iOS Engineer",
   org: "Hinge",
   studio: "Moskowitz Labs",
-  email: "jared@jaredmoskowitz.com",
+  email: "jaredmoskowitz123@gmail.com", // TODO: migrate to custom domain email (jared@jaredmoskowitz.com)
   site: "jaredmoskowitz.com",
   location: "New York",
   social: {
