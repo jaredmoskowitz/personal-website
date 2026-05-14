@@ -96,6 +96,13 @@ export const JARED = {
       links: [{ label: "Site", url: "https://moskowitzlabs.com/" }],
     },
     {
+      name:  "NL Native",
+      tag:   "Spec-driven native app development for Claude Code.",
+      desc:  "You describe features in plain English. Seven AI agents — Spec Analyst, Architect, UX Designer, iOS Expert, Android Expert, Backend Expert, QA Verifier — turn them into native iOS, Android, and backend code, verified against the spec. Platform agents never talk to each other; everything routes through the Architect.",
+      stack: ["Claude Code", "Swift", "Kotlin", "TypeScript"],
+      links: [{ label: "GitHub", url: "https://github.com/jaredmoskowitz/nl-native" }],
+    },
+    {
       name:  "Captain",
       tag:   "Pirate-guided task orchestration for Claude Code.",
       desc:  "A state machine skill for Claude Code that breaks any complex task into lettered nodes, tracks progress on an ASCII helm, checkpoints to git at every step, and puts you in control of when to review, rewind, or redirect.",
