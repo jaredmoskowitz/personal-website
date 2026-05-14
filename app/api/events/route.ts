@@ -110,7 +110,14 @@ export async function GET() {
 
   // ── music ────────────────────────────────────────────────────────────────────
   const musicRaw = await getData<{ artist: string; track: string; album: string; ts: string }>('music');
-  const musicEvents: LiveEvent[] = musicRaw.slice(0, 5).map(t => ({
+  const seenTracks = new Set<string>();
+  const musicDeduped = musicRaw.filter(t => {
+    const key = `${t.artist}|${t.track}`;
+    if (seenTracks.has(key)) return false;
+    seenTracks.add(key);
+    return true;
+  });
+  const musicEvents: LiveEvent[] = musicDeduped.slice(0, 5).map(t => ({
     type:   'music',
     text:   `${t.track} — ${t.artist}`,
     source: t.album || t.artist,

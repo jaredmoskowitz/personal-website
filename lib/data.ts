@@ -13,7 +13,7 @@ export const JARED = {
   },
   intro: {
     tag:  "Senior iOS engineer and former founder. Native mobile, AI product, and agentic systems.",
-    long: "I ship apps. Senior iOS engineer at Hinge by day — AI-native builder the rest of the time. I drove Claude Code adoption across Hinge before it was mainstream, shipped AI features to millions of users, and I'm building Sesh and Today on the side. I care about the millisecond animations land and the product decision hiding inside every technical choice.",
+    long: "I ship apps. Senior iOS engineer at Hinge — I drove Claude Code adoption before most people knew it existed, shipped generative AI features to millions of users, and was the first engineer there to ship on both iOS and Android. I'm also building Sesh and Today on the side. I've been coding for 13 years and I still care about the exact frame an animation lands on.",
   },
   experience: [
     {
