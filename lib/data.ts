@@ -134,9 +134,8 @@ export const JARED = {
   skills: {
     Mobile:         ["Swift", "Swift Concurrency", "UIKit", "SwiftUI", "VIPER", "MVVM", "Kotlin", "React Native", "Flutter", "WidgetKit", "Accessibility"],
     "Web & Backend": ["TypeScript", "Next.js", "Node.js", "Python", "React", "Supabase", "PostgreSQL", "REST APIs", "Vercel"],
-    "AI & LLMs":    ["Claude Code", "Cursor", "Codex", "Agentic workflows", "Agentic harnesses", "Tool-calling", "Claude API", "Gemini API", "OpenAI API", "Prompt engineering", "RAG"],
+    "AI & LLMs":    ["Claude Code", "Cursor", "Codex", "Agentic workflows", "Agentic harnesses", "Tool-calling", "Spec-driven development", "Claude API", "Gemini API", "OpenAI API", "Prompt engineering", "RAG"],
     Tools:          ["Xcode", "Git", "Figma", "Lokalise", "Turborepo", "App Store Connect", "Firebase"],
-    Leadership:     ["Spec-driven development", "Mentoring", "Technical writing"],
   },
   commits: [
     { repo: "jaredmoskowitz/sesh",          msg: "ai: tool-calling findSongs now filters by BPM range",               when: "3h ago",    sha: "9c4a1bd" },
