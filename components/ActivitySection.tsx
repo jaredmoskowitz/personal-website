@@ -74,7 +74,7 @@ export default function ActivitySection() {
     <section id="tm-now" className="tm-section" style={{ marginBottom: 96 }}>
       <CmdLine>tail -f ~/.activity</CmdLine>
       <p style={{ marginTop: 18, fontSize: 14.5, color: 'var(--body)', maxWidth: 720, lineHeight: 1.7 }}>
-        Everything I'm doing right now, pulled live. Commits straight from GitHub, articles auto-logged by a Chrome extension I wrote, music and deploys as they happen.
+        Everything I'm doing right now, pulled live. Commits straight from GitHub, articles auto-logged by a Chrome extension I wrote, music and deploys as they happen. None of these commits are from Hinge — personal and side project repos only.
       </p>
 
       {/* Stats */}
