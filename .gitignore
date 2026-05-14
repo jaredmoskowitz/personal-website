@@ -18,9 +18,14 @@ build/
 # Vercel
 .vercel
 
-# Data files (backfilled locally, not committed)
+# Data files (local only — synced via API, not committed)
 data/commits.json
 data/deploys.json
+data/reading-pending.json
+data/agent-stats.json
+data/music.json
+data/podcasts.json
+data/sync-state.json
 
 # Keep reading.json — manually curated, should be in source
 # data/reading.json
@@ -37,3 +42,4 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+.env*.local
