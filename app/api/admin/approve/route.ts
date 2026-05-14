@@ -4,6 +4,13 @@ import type { PendingArticle } from '@/app/api/reading/pending/route';
 
 const SECRET = process.env.READING_SECRET;
 
+function isAuthorized(req: NextRequest): boolean {
+  const host = req.headers.get('host') ?? '';
+  if (host.startsWith('localhost:') || host === 'localhost') return true;
+  const auth = req.headers.get('authorization');
+  return !!SECRET && auth === `Bearer ${SECRET}`;
+}
+
 interface Article {
   title:  string;
   source: string;
@@ -16,8 +23,7 @@ interface Article {
 // Body: { title: string }
 // Moves an article from reading-pending → reading, then forwards to the live site if LIVE_API_URL is set.
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (!SECRET || auth !== `Bearer ${SECRET}`) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

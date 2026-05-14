@@ -17,6 +17,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [secret, setSecret] = useState('');
   const [loading, setLoading] = useState(true);
+  const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,7 +41,7 @@ export default function AdminPage() {
         method: 'POST',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': `Bearer ${secret}`,
+          ...(!isLocalhost && { 'Authorization': `Bearer ${secret}` }),
         },
         body: JSON.stringify({ title }),
       });
@@ -62,7 +63,7 @@ export default function AdminPage() {
         method: 'DELETE',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': `Bearer ${secret}`,
+          ...(!isLocalhost && { 'Authorization': `Bearer ${secret}` }),
         },
         body: JSON.stringify({ title }),
       });
@@ -82,17 +83,19 @@ export default function AdminPage() {
       <h1 className="text-2xl font-bold mb-2">Reading Approval Queue</h1>
       <p className="text-zinc-400 text-sm mb-6">Local-only. Approve to push to the live site.</p>
 
-      {/* Secret input */}
-      <div className="mb-8">
-        <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">READING_SECRET</label>
-        <input
-          type="password"
-          value={secret}
-          onChange={e => setSecret(e.target.value)}
-          placeholder="paste secret from .env.local"
-          className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm w-80 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
-        />
-      </div>
+      {/* Secret input — only needed outside localhost */}
+      {!isLocalhost && (
+        <div className="mb-8">
+          <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">READING_SECRET</label>
+          <input
+            type="password"
+            value={secret}
+            onChange={e => setSecret(e.target.value)}
+            placeholder="paste secret from .env.local"
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm w-80 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+          />
+        </div>
+      )}
 
       {loading && <p className="text-zinc-500">Loading…</p>}
 
