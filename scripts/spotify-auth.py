@@ -27,7 +27,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 ENV_FILE  = os.path.join(REPO_ROOT, ".env.local")
 
 REDIRECT_URI  = "https://example.com/callback"
-SCOPES        = "user-read-recently-played"
+SCOPES        = "user-read-recently-played user-read-currently-playing"
 AUTH_URL      = "https://accounts.spotify.com/authorize"
 TOKEN_URL     = "https://accounts.spotify.com/api/token"
 

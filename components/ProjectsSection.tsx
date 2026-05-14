@@ -1,5 +1,11 @@
+import Image from 'next/image';
 import CmdLine from './CmdLine';
 import { JARED } from '@/lib/data';
+
+const PROJECT_IMAGES: Record<string, string> = {
+  Sesh:  '/sesh-hero.png',
+  Today: '/today-hero.png',
+};
 
 export default function ProjectsSection() {
   const J = JARED;
@@ -23,9 +29,25 @@ export default function ProjectsSection() {
               <span className="tm-acc" style={{ fontSize: 12 }}>★ featured · {p.year}</span>
             </div>
             <div className="tm-meta" style={{ marginBottom: 18, color: 'var(--body)', fontSize: 14 }}>{p.tag}</div>
-            <div className="tm-placeholder">
-              <span className="tm-soft" style={{ fontSize: 12 }}>[ {p.name.toUpperCase()}_HERO.PNG ]</span>
-            </div>
+            {PROJECT_IMAGES[p.name] ? (
+              <div style={{
+                borderRadius: 8, overflow: 'hidden', background: 'var(--surf)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                height: 220,
+              }}>
+                <Image
+                  src={PROJECT_IMAGES[p.name]}
+                  alt={`${p.name} screenshot`}
+                  width={330}
+                  height={220}
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                />
+              </div>
+            ) : (
+              <div className="tm-placeholder">
+                <span className="tm-soft" style={{ fontSize: 12 }}>[ {p.name.toUpperCase()}_HERO.PNG ]</span>
+              </div>
+            )}
             <p style={{ marginTop: 18, fontSize: 14.5, color: 'var(--body)', lineHeight: 1.65, minHeight: 76 }}>{p.desc}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
               {p.stack.map(s => <span key={s} className="tm-pill">{s}</span>)}
@@ -63,9 +85,13 @@ export default function ProjectsSection() {
             <div className="tm-soft sec-stack" style={{ fontSize: 12.5, letterSpacing: '.01em' }}>
               {p.stack.join(' · ')}
             </div>
-            <a className="tm-link" href="#" style={{ fontSize: 14, justifySelf: 'end' }}>
-              {p.links[0].label.toLowerCase()} →
-            </a>
+            {p.links[0].url !== '#' ? (
+              <a className="tm-link" href={p.links[0].url} target="_blank" rel="noopener" style={{ fontSize: 14, justifySelf: 'end' }}>
+                {p.links[0].label.toLowerCase()} →
+              </a>
+            ) : (
+              <span className="tm-soft" style={{ fontSize: 13, justifySelf: 'end' }}>private</span>
+            )}
           </div>
         ))}
       </div>

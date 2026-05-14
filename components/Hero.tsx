@@ -104,18 +104,18 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Latest thought */}
+          {/* Latest deploy */}
           <div className="tm-card" style={{ padding: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span className="tm-soft" style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase' }}>latest thought</span>
+              <span className="tm-soft" style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase' }}>latest deploy</span>
               <span style={{ flex: 1 }} />
-              <span className="tm-soft" style={{ fontSize: 11 }}>{J.thoughts[0].date}</span>
+              <span className="tm-soft" style={{ fontSize: 11 }}>{J.events.find(e => e.type === 'deploy')?.time}</span>
             </div>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: 'var(--body)' }}>
-              {J.thoughts[0].body}
+              {J.events.find(e => e.type === 'deploy')?.text}
             </p>
             <div className="tm-acc" style={{ marginTop: 8, fontSize: 12 }}>
-              {J.thoughts[0].tags.map(x => '#' + x).join(' ')}
+              {J.events.find(e => e.type === 'deploy')?.source}
             </div>
           </div>
 

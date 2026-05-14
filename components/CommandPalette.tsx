@@ -34,7 +34,7 @@ function buildIndex(): Item[] {
   const items: Item[] = [];
 
   [
-    { id: 'tm-now',        label: 'Activity',  sub: 'live commits, thoughts, reading', kw: 'now activity live feed' },
+    { id: 'tm-now',        label: 'Activity',  sub: 'live commits, reading, activity', kw: 'now activity live feed' },
     { id: 'tm-experience', label: 'Work',      sub: 'Hinge · Amazon · Microsoft',      kw: 'work experience job' },
     { id: 'tm-projects',   label: 'Projects',  sub: 'shipped + in-flight',             kw: 'projects shipped' },
     { id: 'tm-skills',     label: 'Stack',     sub: 'Mobile · Web · AI · Tools',       kw: 'stack skills tech' },
@@ -74,13 +74,6 @@ function buildIndex(): Item[] {
     label: cm.msg,
     sub: cm.sha.slice(0, 7) + ' · ' + cm.repo.split('/')[1] + ' · ' + cm.when,
     search: cm.msg + ' ' + cm.repo + ' ' + cm.sha,
-  }));
-
-  J.thoughts.forEach((t, i) => items.push({
-    kind: 'thought', id: 'th-' + i, target: 'tm-now',
-    label: t.body.length > 70 ? t.body.slice(0, 67) + '…' : t.body,
-    sub: t.date + ' · ' + t.tags.map(x => '#' + x).join(' '),
-    search: t.body + ' ' + t.tags.join(' '),
   }));
 
   J.reading.forEach(r => items.push({

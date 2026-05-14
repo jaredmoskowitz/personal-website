@@ -67,7 +67,7 @@ export const JARED = {
       name:  "Sesh",
       tag:   "AI-native music library management for A&Rs and music managers.",
       desc:  "React Native (Expo) + Next.js monorepo. Supabase backend with RLS, 14 tables, fractional indexing for drag-and-drop. Cloudflare R2 storage. AI chat powered by Gemini 2.5 Flash with tool-calling architecture — findSongs, createPlaylist — so the model operates directly on the user's library. Tier-gated subscriptions. Live on App Store and web.",
-      stack: ["React Native", "Expo", "Next.js", "TypeScript", "Supabase", "Gemini API", "Turborepo"],
+      stack: ["React Native", "Expo", "Next.js", "TypeScript", "Supabase", "Gemini API", "Cursor", "Turborepo"],
       links: [{ label: "App Store", url: "https://seshapp.live/" }, { label: "Site", url: "https://seshapp.live/" }],
       year:  "2026",
     },
@@ -75,7 +75,7 @@ export const JARED = {
       name:  "Today",
       tag:   "A daily focus app that respects the day you actually have.",
       desc:  "Minimalist iOS todo + Pomodoro timer. Native SwiftUI, MVVM + Coordinator, offline-first with Supabase sync and calendar integration. Built with a custom agentic development harness — four named agent roles (Implementer, SpecReviewer, CodeQualityReviewer, CraftReviewer) with explicit criteria, architecture docs as source of truth. High craft focus on motion and typography.",
-      stack: ["SwiftUI", "Swift Concurrency", "Supabase", "Claude Code"],
+      stack: ["SwiftUI", "Swift Concurrency", "Supabase", "Claude Code", "Codex"],
       links: [{ label: "App Store", url: "https://todaydailyfocus.com/" }, { label: "Site", url: "https://todaydailyfocus.com/" }],
       year:  "2026",
     },
@@ -113,8 +113,9 @@ export const JARED = {
   skills: {
     Mobile:         ["Swift", "Swift Concurrency", "UIKit", "SwiftUI", "VIPER", "MVVM", "Kotlin", "React Native", "Flutter", "WidgetKit", "Accessibility"],
     "Web & Backend": ["TypeScript", "Next.js", "Node.js", "Python", "React", "Supabase", "PostgreSQL", "REST APIs", "Vercel"],
-    "AI & LLMs":    ["Claude Code", "Agentic workflows", "Tool-calling", "Claude API", "Gemini API", "OpenAI API", "Prompt engineering", "RAG"],
-    Tools:          ["Xcode", "Git", "Figma", "Lokalise", "Turborepo", "App Store Connect", "Firebase", "Linear"],
+    "AI & LLMs":    ["Claude Code", "Cursor", "Codex", "Agentic workflows", "Agentic harnesses", "Tool-calling", "Claude API", "Gemini API", "OpenAI API", "Prompt engineering", "RAG"],
+    Tools:          ["Xcode", "Git", "Figma", "Lokalise", "Turborepo", "App Store Connect", "Firebase"],
+    Leadership:     ["Spec-driven development", "Mentoring", "Technical writing"],
   },
   commits: [
     { repo: "jaredmoskowitz/sesh",          msg: "ai: tool-calling findSongs now filters by BPM range",               when: "3h ago",    sha: "9c4a1bd" },
@@ -125,28 +126,6 @@ export const JARED = {
     { repo: "jaredmoskowitz/today",         msg: "supabase: offline-first sync handles conflict resolution",         when: "5d ago",    sha: "20fa3c9" },
     { repo: "moskowitzlabs/platform",       msg: "ssr: ISR tag-based revalidation keeps content fresh instantly",   when: "1w ago",    sha: "84dd06e" },
     { repo: "jaredmoskowitz/sesh",          msg: "fractional-indexing: drag-and-drop order persists across sessions", when: "1w ago",  sha: "f12bb71" },
-  ],
-  thoughts: [
-    {
-      date: "May 9, 2026",
-      tags: ["ai", "tooling"],
-      body: "The best thing about Claude Code isn't the code it writes — it's the forcing function to write specs. You can't direct an agent without knowing what you want. Most engineers skip that step.",
-    },
-    {
-      date: "May 4, 2026",
-      tags: ["ios", "craft"],
-      body: "Spring curves are the typography of motion. Most apps use the system defaults and call it done. The apps I remember spent an afternoon on this.",
-    },
-    {
-      date: "Apr 28, 2026",
-      tags: ["ai", "product"],
-      body: "Tool-calling is where AI goes from assistant to collaborator. findSongs, createPlaylist — the model isn't telling you what to do, it's doing it. That's a different product category entirely.",
-    },
-    {
-      date: "Apr 21, 2026",
-      tags: ["craft", "taste"],
-      body: "The empty-state screen is where I judge an app. If you wrote three real sentences here, I trust the rest of your product.",
-    },
   ],
   reading: [
     { title: "The Grug Brained Developer",                             source: "grugbrain.dev",          date: "May 11" },

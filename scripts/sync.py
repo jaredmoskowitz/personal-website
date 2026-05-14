@@ -472,6 +472,26 @@ def sync_spotify(since_ts: str | None) -> int:
             "ts":     played_at,
         })
 
+    # Also capture currently-playing track (needs user-read-currently-playing scope)
+    try:
+        now_req = urllib.request.Request(
+            "https://api.spotify.com/v1/me/player/currently-playing",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        with urllib.request.urlopen(now_req, timeout=15) as resp:
+            if resp.status == 200:
+                now_data = json.loads(resp.read())
+                item = now_data.get("item")
+                if item and now_data.get("is_playing"):
+                    tracks.insert(0, {
+                        "artist": ", ".join(a["name"] for a in item.get("artists", [])),
+                        "track":  item.get("name", ""),
+                        "album":  item.get("album", {}).get("name", ""),
+                        "ts":     datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                    })
+    except Exception:
+        pass  # scope not granted yet or nothing playing
+
     if not tracks:
         return 0
 
@@ -686,4 +706,13 @@ def main():
 if __name__ == "__main__":
     # Make urllib.parse available at module level for Spotify
     import urllib.parse
-    main()
+    if "--spotify" in sys.argv:
+        # Lightweight spotify-only run (no lock, no full output)
+        state = load_state()
+        added = sync_spotify(state.get("last_run_spotify"))
+        if added:
+            print(f"spotify: +{added} tracks")
+            state["last_run_spotify"] = datetime.datetime.utcnow().isoformat() + "Z"
+            save_state(state)
+    else:
+        main()

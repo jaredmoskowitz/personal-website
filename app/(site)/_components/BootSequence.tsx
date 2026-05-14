@@ -15,7 +15,7 @@ const BOOT_CMD = './build-site --portfolio --owner=jared';
 // null = blank gap line
 const BOOT_OUT: (null | { text: string; ok?: boolean; ready?: boolean })[] = [
   { text: '→ fetching commits       ', ok: true },
-  { text: '→ fetching thoughts      ', ok: true },
+  { text: '→ fetching activity      ', ok: true },
   { text: '→ fetching reading-list  ', ok: true },
   { text: '→ compiling sections     ', ok: true },
   { text: '→ binding ⌘K             ', ok: true },

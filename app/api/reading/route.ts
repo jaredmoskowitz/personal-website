@@ -11,14 +11,31 @@ interface Article {
   ts?: string; // ISO timestamp for sorting; omitted from API response
 }
 
+const BLOCKED_SOURCES = new Set(['reddit.com']);
+
+const BLOCKED_TITLE_PATTERNS = [
+  /interview/i,
+  /job search/i,
+  /resume/i,
+  /salary/i,
+];
+
+function isAllowed(article: Article): boolean {
+  if (BLOCKED_SOURCES.has(article.source)) return false;
+  if (BLOCKED_TITLE_PATTERNS.some(p => p.test(article.title))) return false;
+  return true;
+}
+
 export async function GET() {
   const articles = await getData<Article>('reading');
-  const sorted = [...articles].sort((a, b) => {
-    if (a.ts && b.ts) return new Date(b.ts).getTime() - new Date(a.ts).getTime();
-    if (a.ts) return -1;
-    if (b.ts) return 1;
-    return 0;
-  });
+  const sorted = [...articles]
+    .filter(isAllowed)
+    .sort((a, b) => {
+      if (a.ts && b.ts) return new Date(b.ts).getTime() - new Date(a.ts).getTime();
+      if (a.ts) return -1;
+      if (b.ts) return 1;
+      return 0;
+    });
   const response = sorted.slice(0, 20).map(({ ts: _ts, ...rest }) => rest);
   return NextResponse.json({ reading: response });
 }

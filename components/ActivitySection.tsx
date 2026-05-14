@@ -19,10 +19,25 @@ interface Article {
   url?:   string;
 }
 
+interface LiveEvent {
+  type:    string;
+  sha?:    string;
+  text:    string;
+  source:  string;
+  time:    string;
+  status?: string;
+}
+
+const ACTIVITY_TYPES = new Set(['playing', 'music', 'deploy', 'ship']);
+
+
+const STATIC_EVENTS = (JARED.events as unknown as LiveEvent[]).filter(e => ACTIVITY_TYPES.has(e.type));
+
 export default function ActivitySection() {
-  const [commits, setCommits] = useState<Commit[]>(JARED.commits as unknown as Commit[]);
-  const [reading, setReading] = useState<Article[]>(JARED.reading as unknown as Article[]);
-  const [stats,   setStats  ] = useState<StatCard[]>(JARED.stats  as unknown as StatCard[]);
+  const [commits,  setCommits ] = useState<Commit[]>(JARED.commits as unknown as Commit[]);
+  const [reading,  setReading ] = useState<Article[]>(JARED.reading as unknown as Article[]);
+  const [stats,    setStats   ] = useState<StatCard[]>(JARED.stats  as unknown as StatCard[]);
+  const [activity, setActivity] = useState<LiveEvent[]>(STATIC_EVENTS);
 
   useEffect(() => {
     fetch('/api/commits')
@@ -45,11 +60,21 @@ export default function ActivitySection() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetch('/api/events')
+      .then(r => r.json())
+      .then((d: { events: LiveEvent[] }) => {
+        const filtered = d.events?.filter(e => ACTIVITY_TYPES.has(e.type));
+        if (filtered?.length) setActivity(filtered);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section id="tm-now" className="tm-section" style={{ marginBottom: 96 }}>
       <CmdLine>tail -f ~/.activity</CmdLine>
       <p style={{ marginTop: 18, fontSize: 14.5, color: 'var(--body)', maxWidth: 720, lineHeight: 1.7 }}>
-        Everything I'm doing right now, pulled live. Commits straight from GitHub, thoughts from a JSON file in this repo, articles auto-logged by a chrome extension I wrote for myself.
+        Everything I'm doing right now, pulled live. Commits straight from GitHub, articles auto-logged by a Chrome extension I wrote, music and deploys as they happen.
       </p>
 
       {/* Stats */}
@@ -108,33 +133,51 @@ export default function ActivitySection() {
         ))}
       </div>
 
-      {/* Thoughts + reading */}
+      {/* Activity + Reading — two columns (activity left, reading right) */}
       <div style={{
         marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18,
-      }} className="thoughts-grid">
-        <style>{`@media (max-width: 760px) { .thoughts-grid { grid-template-columns: 1fr !important; } }`}</style>
+      }} className="activity-grid">
+        <style>{`@media (max-width: 760px) { .activity-grid { grid-template-columns: 1fr !important; } }`}</style>
 
-        {/* Thoughts */}
+        {/* Activity: music / deploys / ships */}
         <div className="tm-card">
           <div style={{
             padding: '16px 22px', borderBottom: '1px solid var(--rule)',
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span className="tm-h2">thoughts</span>
-            <span className="tm-soft" style={{ fontSize: 13 }}>// thoughts.jsonl</span>
+            <span className="tm-pulse" />
+            <span className="tm-h2">activity</span>
+            <span className="tm-soft" style={{ fontSize: 13 }}>// music · deploys · ships</span>
           </div>
-          {JARED.thoughts.map((t, i) => (
-            <div key={i} style={{
-              padding: '18px 22px',
-              borderTop: i === 0 ? 'none' : '1px solid var(--rule)',
-            }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', marginBottom: 8 }}>
-                <span className="tm-soft" style={{ fontSize: 12 }}>{t.date}</span>
-                <span className="tm-acc" style={{ fontSize: 12 }}>{t.tags.map(x => '#' + x).join(' ')}</span>
+          {activity.map((ev, i) => {
+            const isOk   = ev.status === 'ok';
+            const typeColor = isOk ? 'var(--green)'
+              : (ev.type === 'playing' || ev.type === 'music') ? 'var(--body)'
+              : 'var(--accent)';
+            const typeLabel = (ev.type === 'playing' || ev.type === 'music') ? 'listening'
+              : ev.type === 'deploy' ? 'deploy'
+              : ev.type === 'ship'   ? 'ship'
+              : ev.type;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '72px 1fr auto',
+                  alignItems: 'baseline', gap: 10,
+                  padding: '14px 22px',
+                  borderTop: i === 0 ? 'none' : '1px solid var(--rule)',
+                }}
+              >
+                <span style={{
+                  fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase',
+                  color: typeColor, flexShrink: 0,
+                }}>{typeLabel}</span>
+                <span className="tm-ink" style={{ fontSize: 14, lineHeight: 1.4 }}>{ev.text}</span>
+                <span className="tm-soft" style={{ fontSize: 12, flexShrink: 0, textAlign: 'right' }}>{ev.time}</span>
               </div>
-              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: 'var(--body)' }}>{t.body}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Reading */}

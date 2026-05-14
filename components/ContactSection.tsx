@@ -6,19 +6,21 @@ export default function ContactSection() {
 
   return (
     <section id="tm-contact" className="tm-section" style={{ marginBottom: 32 }}>
-      <CmdLine>{`echo "$EMAIL" && exit`}</CmdLine>
+      <CmdLine>{`open linkedin && exit`}</CmdLine>
       <div style={{ marginTop: 28 }}>
         <div style={{ fontSize: 36, letterSpacing: '-0.02em', fontWeight: 600 }}>
           <a
             className="tm-link"
-            href={`mailto:${J.email}`}
+            href={`https://${J.social.linkedin}`}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ color: 'var(--accent)', borderBottomColor: 'var(--accent)' }}
           >
-            {J.email}
+            linkedin ↗
           </a>
         </div>
         <p style={{ marginTop: 18, color: 'var(--body)', fontSize: 15, maxWidth: 620, lineHeight: 1.7 }}>
-          For work, collaborations, or anything you'd ordinarily DM. Replies in ≤ 48h on weekdays.
+          For work, collaborations, or anything you'd ordinarily DM.
         </p>
         <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 22, fontSize: 14 }}>
           <a className="tm-link" href={`https://${J.social.github}`} target="_blank" rel="noopener">{J.social.github}</a>
