@@ -135,16 +135,26 @@ export async function GET() {
     date:   e.ts,
   }));
 
-  const all = [...commitEvents, ...deployEvents, ...readingEvents, ...musicEvents, ...podcastEvents]
-    .sort((a, b) => {
-      const da = new Date(a.date).getTime();
-      const db = new Date(b.date).getTime();
-      if (isNaN(da) && isNaN(db)) return 0;
-      if (isNaN(da)) return 1;
-      if (isNaN(db)) return -1;
-      return db - da;
-    })
-    .slice(0, 30)
+  const byDate = (a: LiveEvent, b: LiveEvent) => {
+    const da = new Date(a.date).getTime();
+    const db = new Date(b.date).getTime();
+    if (isNaN(da) && isNaN(db)) return 0;
+    if (isNaN(da)) return 1;
+    if (isNaN(db)) return -1;
+    return db - da;
+  };
+
+  // Always guarantee at least 2 music/podcast events are present regardless of age.
+  const guaranteed = [...musicEvents.slice(0, 2), ...podcastEvents.slice(0, 1)];
+  const guaranteed_shas = new Set(guaranteed.map(e => e.date));
+
+  const rest = [...commitEvents, ...deployEvents, ...readingEvents, ...musicEvents, ...podcastEvents]
+    .filter(e => !guaranteed_shas.has(e.date))
+    .sort(byDate)
+    .slice(0, 28);
+
+  const all = [...guaranteed, ...rest]
+    .sort(byDate)
     .map(({ date: _d, ...rest }) => rest);
 
   return NextResponse.json({ events: all });
