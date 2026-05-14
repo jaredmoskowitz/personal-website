@@ -90,7 +90,7 @@ export default function ProjectsSection() {
                 {p.links[0].label.toLowerCase()} →
               </a>
             ) : (
-              <span className="tm-soft" style={{ fontSize: 13, justifySelf: 'end' }}>private</span>
+              <span className="tm-soft" style={{ fontSize: 13, justifySelf: 'end' }}>{p.links[0].label.toLowerCase()}</span>
             )}
           </div>
         ))}

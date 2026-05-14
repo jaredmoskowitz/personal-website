@@ -82,11 +82,39 @@ export const JARED = {
   ],
   secondary: [
     {
+      name:  "workwithjared.ai",
+      tag:   "AI consulting for founders.",
+      desc:  "Bespoke AI consulting: intake → audit → build together → handoff. Helps founders move from basic prompting into real tool-building and orchestration. This site is the live artifact.",
+      stack: ["Next.js", "TypeScript", "Tailwind", "Vercel"],
+      links: [{ label: "Site", url: "https://workwithjared.ai/" }],
+    },
+    {
       name:  "Moskowitz Labs",
-      tag:   "AI agent pipeline that builds and deploys client websites.",
-      desc:  "7-skill Claude Code agent system: research → design → SEO → build → QA → deploy → update. Multi-tenant Next.js 16 on Vercel with Supabase JSONB configs. Sites go from client intake to live in a fraction of traditional agency time.",
+      tag:   "A web agency where AI does the building.",
+      desc:  "Clients get a finished, live website — without the traditional agency timeline or price tag. AI handles research, design, copywriting, build, QA, and deployment. The output is indistinguishable from bespoke work. The timeline isn't.",
       stack: ["Next.js 16", "React 19", "Supabase", "Claude Code", "Vercel", "Turborepo"],
       links: [{ label: "Site", url: "https://moskowitzlabs.com/" }],
+    },
+    {
+      name:  "Captain",
+      tag:   "Pirate-guided task orchestration for Claude Code.",
+      desc:  "A state machine skill for Claude Code that breaks any complex task into lettered nodes, tracks progress on an ASCII helm, checkpoints to git at every step, and puts you in control of when to review, rewind, or redirect.",
+      stack: ["Claude Code", "TypeScript"],
+      links: [{ label: "GitHub", url: "https://github.com/jaredmoskowitz/captain" }],
+    },
+    {
+      name:  "VeryLegit Marketplace",
+      tag:   "Productivity and personality plugins for Claude Code.",
+      desc:  "A curated plugin marketplace for Claude Code. Skills include captain (task orchestration), debate (adversarial plan review), wtf (angry quick questions), tldr (brutal simplification), bear-notes, iOS simulator control, and more.",
+      stack: ["Claude Code", "TypeScript"],
+      links: [{ label: "GitHub", url: "https://github.com/VeryLegit/verylegit-marketplace" }],
+    },
+    {
+      name:  "SwipeClean",
+      tag:   "Clean your Gmail inbox by swiping through senders.",
+      desc:  "Native iOS and Android app — no backend. Scans your last 6 months of Gmail, groups by sender, scores using heuristics and on-device ML, and lets you swipe left to block or right to keep. Blocked senders are auto-filtered to trash.",
+      stack: ["SwiftUI", "Jetpack Compose", "Core ML", "Gmail API"],
+      links: [{ label: "In progress", url: "#" }],
     },
     {
       name:  "Prediction Market Platform",
@@ -94,13 +122,6 @@ export const JARED = {
       desc:  "Five-subsystem architecture with a multi-stage Claude evaluation pipeline: keyword prefilter → Haiku triage → Sonnet adversarial analysis. Monte Carlo backtesting with 93+ test files, per-heuristic metrics (AUC, F1), and AI-in-the-loop config cycles.",
       stack: ["Python", "Claude API", "Next.js", "PostgreSQL"],
       links: [{ label: "Private", url: "#" }],
-    },
-    {
-      name:  "workwithjared.ai",
-      tag:   "AI consulting for founders — this site.",
-      desc:  "Bespoke AI consulting: intake → audit → build together → handoff. Helps founders move from basic prompting into real tool-building and orchestration. This site is the live artifact.",
-      stack: ["Next.js", "TypeScript", "Tailwind", "Vercel"],
-      links: [{ label: "GitHub", url: "#" }],
     },
     {
       name:  "DripDrop",
