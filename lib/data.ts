@@ -13,7 +13,7 @@ export const JARED = {
   },
   intro: {
     tag:  "Senior iOS engineer and former founder. Native mobile, AI product, and agentic systems.",
-    long: "I ship apps. Senior iOS engineer at Hinge — I drove Claude Code adoption before most people knew it existed, shipped generative AI features to millions of users, and was the first engineer there to ship on both iOS and Android. I'm also building Sesh and Today on the side. I've been coding for 13 years and I still care about the exact frame an animation lands on.",
+    long: "I build cool things.",
   },
   experience: [
     {
@@ -98,7 +98,7 @@ export const JARED = {
     {
       name:  "NL Native",
       tag:   "Spec-driven native app development for AI coding agents.",
-      desc:  "You describe features in plain English. Seven AI agents — Spec Analyst, Architect, UX Designer, iOS Expert, Android Expert, Backend Expert, QA Verifier — turn them into native iOS, Android, and backend code, verified against the spec. Platform agents never talk to each other; everything routes through the Architect.",
+      desc:  "React Native and Flutter use a shared codebase. NL Native uses a shared natural language base.",
       stack: ["Claude Code", "Swift", "Kotlin", "TypeScript"],
       links: [{ label: "GitHub", url: "https://github.com/jaredmoskowitz/nl-native" }],
     },
@@ -124,18 +124,18 @@ export const JARED = {
       links: [{ label: "In progress", url: "#" }],
     },
     {
-      name:  "Prediction Market Platform",
-      tag:   "Autonomous signal detection and trading engine.",
-      desc:  "Five-subsystem architecture with a multi-stage Claude evaluation pipeline: keyword prefilter → Haiku triage → Sonnet adversarial analysis. Monte Carlo backtesting with 93+ test files, per-heuristic metrics (AUC, F1), and AI-in-the-loop config cycles.",
-      stack: ["Python", "Claude API", "Next.js", "PostgreSQL"],
-      links: [{ label: "Private", url: "#" }],
+      name:  "Mr. Meeseeks",
+      tag:   "Recursive subagent spawning for Claude Code.",
+      desc:  "Skill that is a recursive wrapper around /goal. In trying to reach its goal it will call additional /mr-meeseeks to help achieve the goal until it can no longer exist anymore.",
+      stack: ["Claude Code"],
+      links: [{ label: "GitHub", url: "https://github.com/jaredmoskowitz/mr-meeseeks" }],
     },
     {
       name:  "DripDrop",
       tag:   "Solo-built social video iOS app.",
       desc:  "22,000+ lines of Swift. Video recording, playback, social graph, usage tracking — full stack from zero to App Store, solo.",
       stack: ["Swift", "UIKit", "App Store"],
-      links: [{ label: "Archive", url: "#" }],
+      links: [{ label: "Site", url: "https://dripdropapp.io/" }],
     },
   ],
   skills: {
