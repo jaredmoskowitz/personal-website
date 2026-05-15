@@ -69,6 +69,7 @@ REPOS = [
     ("jaredmoskowitz/love-text-bot",          os.path.expanduser("~/workspace/love-text-bot")),
     ("jaredmoskowitz/work-with-jared",        os.path.expanduser("~/workspace/work-with-jared")),
     ("jaredmoskowitz/personal-website",       os.path.expanduser("~/workspace/personal-website")),
+    ("jaredmoskowitz/mr-meeseeks",            os.path.expanduser("~/workspace/mr-meeseeks")),
 ]
 
 CHROME_HISTORY = os.path.expanduser(
@@ -135,8 +136,9 @@ def post_json(path: str, payload: dict) -> dict:
 
 # ── Git ───────────────────────────────────────────────────────────────────────
 
-def sync_git(since_iso: str | None) -> int:
-    """Scan all repos for commits since `since_iso`, POST to /api/commits/backfill."""
+def sync_git(since_iso: str | None) -> int | None:
+    """Scan all repos for commits since `since_iso`, POST to /api/commits/backfill.
+    Returns None if commits were found but posting failed (so caller won't advance the cursor)."""
     since_arg = ["--since", since_iso] if since_iso else ["--since", "1 year ago"]
     commits = []
 
@@ -167,8 +169,9 @@ def sync_git(since_iso: str | None) -> int:
         return 0
 
     res = post_json("/api/commits/backfill", {"commits": commits})
-    added = res.get("added", 0)
-    return added
+    if "added" not in res:
+        return None  # post failed — don't advance the cursor
+    return res["added"]
 
 # ── Chrome reading ────────────────────────────────────────────────────────────
 
@@ -665,8 +668,12 @@ def main():
     # ── Git ──────────────────────────────────────────────────────────────────
     print("\n[1/5] git commits…")
     new_commits = sync_git(state.get("last_run_commits"))
-    print(f"  +{new_commits} new commits")
-    state["last_run_commits"] = datetime.datetime.utcnow().isoformat() + "Z"
+    if new_commits is None:
+        print(f"  +0 new commits (post failed — cursor not advanced)")
+        new_commits = 0
+    else:
+        print(f"  +{new_commits} new commits")
+        state["last_run_commits"] = datetime.datetime.utcnow().isoformat() + "Z"
 
     # ── Chrome reading ───────────────────────────────────────────────────────
     print("\n[2/5] chrome reading…")
