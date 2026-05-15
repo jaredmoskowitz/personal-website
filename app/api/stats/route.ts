@@ -88,7 +88,7 @@ export async function GET() {
     { n: monthlyCount || '—',                label: 'commits this month' },
     { n: publicRepos  || '—',                label: 'public repos' },
     { n: agent?.sessions_this_month || '—',  label: 'AI sessions this month' },
-    { n: agent?.turns_this_month    || '—',  label: 'AI turns this month' },
+    { n: agent?.turns_this_month    || '—',  label: 'AI prompts this month' },
   ];
 
   return NextResponse.json({ stats }, { headers: { 'Cache-Control': 'public, s-maxage=3600' } });
