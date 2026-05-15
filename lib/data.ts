@@ -172,7 +172,7 @@ export const JARED = {
   events: [
     { type: "commit",  sha: "9c4a1bd", text: "ai: tool-calling findSongs now filters by BPM range",           source: "sesh",              time: "3h ago" },
     { type: "deploy",  text: "main@1f0c2e7 → vercel",                                                          source: "workwithjared",     time: "4h ago",  status: "ok" },
-    { type: "playing", text: "Burial — Untrue",                                                                 source: "Apple Music",        time: "now" },
+    { type: "playing", text: "Meg Smith — Dive Bar Opera",                                                      source: "Spotify",            time: "now" },
     { type: "ship",    text: "Today v1.2 → App Store",                                                         source: "App Store Connect",  time: "5d ago" },
     { type: "commit",  sha: "1f0c2e7", text: "motion: spring curve on task completion feels right now",        source: "today",             time: "1d ago" },
     { type: "thought", text: "the empty-state screen is where I judge an app.",                                source: "thoughts.jsonl",    time: "21d ago" },
