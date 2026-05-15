@@ -83,7 +83,8 @@ PODCASTS_DB = os.path.expanduser(
 )
 PODCASTS_TMP = "/tmp/jared-sync-podcasts.db"
 
-CURSOR_PROJECTS_DIR = os.path.expanduser("~/.cursor/projects")
+CURSOR_PROJECTS_DIR    = os.path.expanduser("~/.cursor/projects")
+CLAUDE_CODE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
 
 # ── PID lock ──────────────────────────────────────────────────────────────────
 
@@ -586,10 +587,48 @@ def sync_podcasts(since_ts: str | None) -> int:
 
 # ── Agent stats ───────────────────────────────────────────────────────────────
 
+def _count_user_prompts(path: str, is_claude_code: bool) -> int:
+    """Count user prompts in a JSONL transcript file."""
+    count = 0
+    try:
+        with open(path, errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if not isinstance(obj, dict):
+                        continue
+                    if is_claude_code:
+                        # Claude Code: {"type": "user", ...}
+                        if obj.get("type") == "user":
+                            count += 1
+                    else:
+                        # Cursor: {"role": "user"} or {"message": {"role": "user"}}
+                        if obj.get("role") == "user":
+                            count += 1
+                        elif isinstance(obj.get("message"), dict) and obj["message"].get("role") == "user":
+                            count += 1
+                except (json.JSONDecodeError, KeyError):
+                    pass
+    except Exception:
+        pass
+    return count
+
+
+def _project_name_from_encoded(encoded: str) -> str:
+    """Extract short project name from encoded dir like 'Users-jaredmoskowitz-workspace-foo'."""
+    prefix = "Users-jaredmoskowitz-workspace-"
+    if encoded.startswith(prefix):
+        return encoded[len(prefix):]
+    return ""
+
+
 def sync_agent_stats() -> dict:
     """
-    Scan ~/.cursor/projects/*/agent-transcripts/*.jsonl for this month's sessions.
-    Returns stats dict.
+    Scan Cursor (~/.cursor/projects) and Claude Code (~/.claude/projects) transcripts
+    for this month's sessions and user prompts.
     """
     now   = datetime.datetime.utcnow()
     start = datetime.datetime(now.year, now.month, 1)
@@ -598,56 +637,32 @@ def sync_agent_stats() -> dict:
     sessions_this_month = 0
     turns_this_month    = 0
 
-    pattern = os.path.join(CURSOR_PROJECTS_DIR, "*", "agent-transcripts", "**", "*.jsonl")
-    for path in glob.glob(pattern, recursive=True):
-        try:
-            mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
-        except OSError:
-            continue
-        if mtime < start:
-            continue
+    sources = [
+        # (glob_pattern, base_dir, is_claude_code)
+        (os.path.join(CURSOR_PROJECTS_DIR, "*", "agent-transcripts", "**", "*.jsonl"), CURSOR_PROJECTS_DIR, False),
+        (os.path.join(CLAUDE_CODE_PROJECTS_DIR, "*", "*.jsonl"), CLAUDE_CODE_PROJECTS_DIR, True),
+    ]
 
-        sessions_this_month += 1
+    for pattern, base_dir, is_claude_code in sources:
+        for path in glob.glob(pattern, recursive=True):
+            try:
+                mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
+            except OSError:
+                continue
+            if mtime < start:
+                continue
 
-        # Extract project name from path — only track real workspace projects
-        parts = path.replace(CURSOR_PROJECTS_DIR, "").lstrip("/").split("/")
-        project_name = parts[0] if parts else ""
-        if project_name.startswith("Users-jaredmoskowitz-workspace-"):
-            project_counts[project_name] = project_counts.get(project_name, 0) + 1
+            sessions_this_month += 1
 
-        try:
-            with open(path, errors="replace") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        obj = json.loads(line)
-                        # Count user turns
-                        if isinstance(obj, dict) and obj.get("role") == "user":
-                            turns_this_month += 1
-                        # Some formats nest messages
-                        elif isinstance(obj, dict) and isinstance(obj.get("message"), dict):
-                            if obj["message"].get("role") == "user":
-                                turns_this_month += 1
-                    except (json.JSONDecodeError, KeyError):
-                        pass
-        except Exception:
-            pass
+            parts = path.replace(base_dir, "").lstrip("/").split("/")
+            project_name = _project_name_from_encoded(parts[0] if parts else "")
+            if project_name:
+                project_counts[project_name] = project_counts.get(project_name, 0) + 1
+
+            turns_this_month += _count_user_prompts(path, is_claude_code)
 
     top_project = max(project_counts, key=lambda k: project_counts[k], default="")
     avg_turns   = round(turns_this_month / sessions_this_month, 1) if sessions_this_month else 0
-
-    # Strip the long macOS project dir encoding from top_project
-    # Format: "Users-jaredmoskowitz-workspace-projectname" → "projectname"
-    # Skip noise dirs like "empty-window" or numeric dirs
-    if top_project:
-        prefix = "Users-jaredmoskowitz-workspace-"
-        if top_project.startswith(prefix):
-            top_project = top_project[len(prefix):]
-        elif not top_project.startswith("Users-"):
-            # Numeric or noise dir — skip
-            top_project = ""
 
     return {
         "sessions_this_month": sessions_this_month,
