@@ -66,9 +66,8 @@ export default function Hero() {
             {J.intro.long}
           </p>
           <div style={{ marginTop: 24, display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 14 }}>
-            <a className="tm-link" href={`https://${J.social.linkedin}`} target="_blank" rel="noopener">linkedin</a>
             <a className="tm-link" href={`https://${J.social.github}`} target="_blank" rel="noopener">{J.social.github}</a>
-            <a className="tm-link" href={`https://${J.social.twitter}`} target="_blank" rel="noopener">{J.social.twitter}</a>
+            <a className="tm-link" href={`https://${J.social.linkedin}`} target="_blank" rel="noopener">linkedin</a>
           </div>
         </div>
 
