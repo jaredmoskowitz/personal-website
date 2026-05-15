@@ -13,13 +13,9 @@ interface LiveEvent {
   status?: string;
 }
 
-interface Props {
-  onOpenPalette: () => void;
-}
-
 const STATIC_EVENTS = JARED.events as unknown as LiveEvent[];
 
-export default function Chrome({ onOpenPalette }: Props) {
+export default function Chrome() {
   const { theme, toggleTheme } = useTheme();
   const [events,  setEvents ] = useState<LiveEvent[]>(STATIC_EVENTS);
   const [tickIdx, setTickIdx] = useState(0);
@@ -72,10 +68,6 @@ export default function Chrome({ onOpenPalette }: Props) {
         </span>
         <span style={{ flex: 1 }} />
 
-        <button className="tm-kbd" onClick={onOpenPalette} aria-label="Open command palette">
-          <span>search</span>
-          <kbd>⌘K</kbd>
-        </button>
         <button className="tm-toggle" onClick={toggleTheme}>
           {theme === 'dark' ? 'theme --light' : 'theme --dark'}
         </button>

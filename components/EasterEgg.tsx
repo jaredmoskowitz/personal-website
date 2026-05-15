@@ -11,17 +11,12 @@ interface Toast {
   at: number;
 }
 
-interface Props {
-  paletteOpen: boolean;
-}
-
-export default function EasterEgg({ paletteOpen }: Props) {
+export default function EasterEgg() {
   const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
     let buf = '';
     const onKey = (e: KeyboardEvent) => {
-      if (paletteOpen) return;
       const t = e.target as HTMLElement;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -37,7 +32,7 @@ export default function EasterEgg({ paletteOpen }: Props) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [paletteOpen]);
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
