@@ -1,7 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
-const USE_REDIS = Boolean(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL);
+// Local dev + activity sync use data/*.json. Redis is for production (Vercel) only.
+const USE_REDIS =
+  process.env.NODE_ENV === 'production' &&
+  Boolean(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL);
 
 // ── File-system helpers (dev / no Redis) ─────────────────────────────────────
 

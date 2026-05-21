@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isLocalAdminContext } from '@/lib/is-local';
 import { getData, setData } from '@/lib/storage';
 
 const SECRET = process.env.READING_SECRET;
@@ -17,9 +18,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (!SECRET || auth !== `Bearer ${SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isLocalAdminContext(req)) {
+    const auth = req.headers.get('authorization');
+    if (!SECRET || auth !== `Bearer ${SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   try {

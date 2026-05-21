@@ -47,13 +47,17 @@ def load_env():
             k, _, v = line.partition("=")
             k = k.strip()
             v = v.strip().strip('"').strip("'")
+            # .env.local sometimes has a literal \n before the closing quote
+            if v.endswith("\\n"):
+                v = v[:-2]
             if k not in os.environ:
                 os.environ[k] = v
 
 load_env()
 
-API_BASE = os.environ.get("LIVE_API_URL", "http://localhost:3000")
-SECRET   = os.environ.get("READING_SECRET", "")
+LOCAL_API = os.environ.get("LOCAL_API_URL", "http://localhost:3000").rstrip("/")
+LIVE_API  = os.environ.get("LIVE_API_URL", "").rstrip("/")
+SECRET    = os.environ.get("READING_SECRET", "")
 
 REPOS = [
     ("VeryLegit/vault",                       os.path.expanduser("~/workspace/vault")),
@@ -115,10 +119,10 @@ def save_state(state: dict):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
 
-# ── HTTP helpers ──────────────────────────────────────────────────────────────
+# ── HTTP / local data helpers ─────────────────────────────────────────────────
 
-def post_json(path: str, payload: dict) -> dict:
-    url  = f"{API_BASE}{path}"
+def _post_to(base: str, path: str, payload: dict) -> dict:
+    url  = f"{base.rstrip('/')}{path}"
     body = json.dumps(payload).encode()
     req  = urllib.request.Request(url, data=body, method="POST")
     req.add_header("Content-Type", "application/json")
@@ -129,11 +133,51 @@ def post_json(path: str, payload: dict) -> dict:
             return json.loads(resp.read())
     except urllib.error.HTTPError as e:
         err = e.read().decode()
-        print(f"  HTTP {e.code} from {path}: {err[:200]}")
+        print(f"  HTTP {e.code} from {base}{path}: {err[:200]}")
         return {}
     except Exception as exc:
-        print(f"  Error posting to {path}: {exc}")
+        print(f"  Error posting to {base}{path}: {exc}")
         return {}
+
+
+def post_json(path: str, payload: dict) -> dict:
+    """POST to local dev API (for the site) and mirror to LIVE_API when configured."""
+    result = _post_to(LOCAL_API, path, payload)
+    if LIVE_API and LIVE_API != LOCAL_API:
+        live_result = _post_to(LIVE_API, path, payload)
+        if not result.get("ok") and live_result.get("ok"):
+            result = live_result
+    return result
+
+
+def write_local_json(key: str, data) -> None:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(os.path.join(DATA_DIR, f"{key}.json"), "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def write_local_music(tracks: list[dict]) -> int:
+    """Merge tracks into data/music.json (same rules as /api/music)."""
+    path = os.path.join(DATA_DIR, "music.json")
+    existing: list[dict] = []
+    if os.path.exists(path):
+        try:
+            existing = json.loads(open(path).read())
+        except Exception:
+            pass
+    seen = {f"{t.get('artist')}|{t.get('track')}|{t.get('ts')}" for t in existing}
+    new_only = [
+        t for t in tracks
+        if t.get("artist") and t.get("track") and t.get("ts")
+        and f"{t['artist']}|{t['track']}|{t['ts']}" not in seen
+    ]
+    merged = sorted(
+        new_only + existing,
+        key=lambda t: t.get("ts", ""),
+        reverse=True,
+    )[:200]
+    write_local_json("music", merged)
+    return len(new_only)
 
 # ── Git ───────────────────────────────────────────────────────────────────────
 
@@ -177,7 +221,7 @@ def sync_git(since_iso: str | None) -> int | None:
 # ── Chrome reading ────────────────────────────────────────────────────────────
 
 BLOCKED_DOMAINS = {
-    "google.com", "mail.google.com", "calendar.google.com", "accounts.google.com",
+    "google.com", "gmail.com", "mail.google.com", "calendar.google.com", "accounts.google.com",
     "docs.google.com", "drive.google.com", "sheets.google.com", "slides.google.com",
     "meet.google.com", "chat.google.com", "maps.google.com", "photos.google.com",
     "translate.google.com", "news.google.com", "play.google.com",
@@ -313,8 +357,33 @@ def is_article(url: str, raw_title: str) -> bool:
     if "news.ycombinator.com" in hostname:
         if re.search(r"/(vote|reply|hide|flag|submit|user\?|threads\?|news\?|ask|show|jobs)\b", url):
             return False
+        if not path.startswith("/item"):
+            return False
 
-    return True
+    if bare in ("reddit.com", "old.reddit.com") and "/comments/" not in path:
+        return False
+
+    if bare in (
+        "news.ycombinator.com",
+        "reddit.com", "old.reddit.com",
+        "en.wikipedia.org", "arxiv.org",
+    ):
+        return True
+    if hostname.endswith(".substack.com") and "/p/" in path:
+        return True
+    article_path_indicators = (
+        "/blog/", "/posts/", "/post/", "/articles/", "/article/",
+        "/essay/", "/writing/", "/notes/", "/thoughts/",
+        "/news/", "/story/", "/stories/",
+        "/research/", "/paper/", "/papers/",
+        "/tutorial/", "/tutorials/", "/guide/", "/guides/",
+    )
+    if any(ind in path.lower() for ind in article_path_indicators):
+        return True
+    if re.search(r"/20(1[5-9]|2[0-9])/", path):
+        return True
+
+    return False
 
 def sync_chrome(since_ts: str | None) -> int:
     """Read Chrome history since since_ts, add new articles to reading-pending.json."""
@@ -322,11 +391,13 @@ def sync_chrome(since_ts: str | None) -> int:
         print("  Chrome history not found, skipping")
         return 0
 
-    since_chrome = 0
+    # Always look back at least 6h so rapid activity runs don't miss visits
+    lookback_floor = datetime.datetime.utcnow() - datetime.timedelta(hours=6)
+    since_chrome = int((lookback_floor.timestamp() + CHROME_EPOCH_OFFSET) * 1_000_000)
     if since_ts:
         dt = datetime.datetime.fromisoformat(since_ts.replace("Z", "+00:00"))
         unix = dt.timestamp()
-        since_chrome = int((unix + CHROME_EPOCH_OFFSET) * 1_000_000)
+        since_chrome = max(since_chrome, int((unix + CHROME_EPOCH_OFFSET) * 1_000_000))
 
     try:
         shutil.copy2(CHROME_HISTORY, CHROME_TMP)
@@ -372,6 +443,10 @@ def sync_chrome(since_ts: str | None) -> int:
         except Exception:
             pass
 
+    scanned = len(rows)
+    article_like = 0
+    skipped_known = 0
+    skipped_filter = 0
     new_articles = []
     for url, raw_title, visit_time in rows:
         if not raw_title:
@@ -380,9 +455,12 @@ def sync_chrome(since_ts: str | None) -> int:
         if len(title) < 10:
             continue
         if title in existing_titles or title in approved_titles:
+            skipped_known += 1
             continue
         if not is_article(url, raw_title):
+            skipped_filter += 1
             continue
+        article_like += 1
 
         unix_ts = (visit_time / 1_000_000) - CHROME_EPOCH_OFFSET
         visit_dt = datetime.datetime.utcfromtimestamp(unix_ts)
@@ -408,6 +486,13 @@ def sync_chrome(since_ts: str | None) -> int:
         os.makedirs(DATA_DIR, exist_ok=True)
         with open(PENDING_FILE, "w") as f:
             json.dump(updated, f, indent=2)
+
+    pending_total = len(existing_pending) + len(new_articles)
+    print(
+        f"  scanned {scanned} visits · {article_like} new article-like · "
+        f"{skipped_known} already queued · {skipped_filter} filtered · "
+        f"{pending_total} total pending"
+    )
 
     return len(new_articles)
 
@@ -437,6 +522,20 @@ def sync_spotify(since_ts: str | None) -> int:
         with urllib.request.urlopen(token_req, timeout=15) as resp:
             token_data  = json.loads(resp.read())
             access_token = token_data.get("access_token", "")
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode()
+        try:
+            err_json = json.loads(err_body)
+            err_code = err_json.get("error", "")
+            err_desc = err_json.get("error_description", err_body[:200])
+        except json.JSONDecodeError:
+            err_code, err_desc = "", err_body[:200]
+        print(f"  Spotify token refresh failed: HTTP {e.code} — {err_desc}")
+        if err_code == "invalid_client":
+            print("  Check SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET in .env.local (or re-run scripts/spotify-auth.py)")
+        elif err_code == "invalid_grant":
+            print("  Refresh token expired — re-run scripts/spotify-auth.py")
+        return 0
     except Exception as e:
         print(f"  Spotify token refresh failed: {e}")
         return 0
@@ -445,11 +544,9 @@ def sync_spotify(since_ts: str | None) -> int:
         print("  Spotify: no access token returned")
         return 0
 
-    # Fetch recently played
-    since_ms = ""
-    if since_ts:
-        dt = datetime.datetime.fromisoformat(since_ts.replace("Z", "+00:00"))
-        since_ms = f"&after={int(dt.timestamp() * 1000)}"
+    # Fetch last 24h from Spotify; dedup (local + API) handles repeat runs
+    lookback_floor = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+    since_ms = f"&after={int(lookback_floor.timestamp() * 1000)}"
 
     history_url = f"https://api.spotify.com/v1/me/player/recently-played?limit=50{since_ms}"
     history_req = urllib.request.Request(
@@ -497,10 +594,14 @@ def sync_spotify(since_ts: str | None) -> int:
         pass  # scope not granted yet or nothing playing
 
     if not tracks:
+        print(f"  fetched {len(data.get('items', []))} from Spotify · 0 new after dedup window")
         return 0
 
+    added_local = write_local_music(tracks)
     res = post_json("/api/music", {"tracks": tracks})
-    return res.get("added", 0)
+    added_api = res.get("added", added_local)
+    print(f"  fetched {len(tracks)} plays · +{added_local} new locally · +{added_api} via API")
+    return max(added_local, added_api)
 
 # ── Podcasts ──────────────────────────────────────────────────────────────────
 
@@ -625,6 +726,38 @@ def _project_name_from_encoded(encoded: str) -> str:
     return ""
 
 
+def _scan_agent_transcripts(
+    pattern: str,
+    base_dir: str,
+    is_claude_code: bool,
+    start: datetime.datetime,
+) -> tuple[int, int, dict[str, int]]:
+    sessions = 0
+    turns = 0
+    project_counts: dict[str, int] = {}
+
+    for path in glob.glob(pattern, recursive=True):
+        try:
+            mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
+        except OSError:
+            continue
+        if mtime < start:
+            continue
+
+        sessions += 1
+        turns += _count_user_prompts(path, is_claude_code)
+
+        parts = path.replace(base_dir, "").lstrip("/").split("/")
+        project_name = _project_name_from_encoded(parts[0] if parts else "")
+        if not project_name and parts:
+            # e.g. Users-jaredmoskowitz-Library-...-workspace-json → workspace-json
+            project_name = parts[0].split("-")[-1]
+        if project_name:
+            project_counts[project_name] = project_counts.get(project_name, 0) + 1
+
+    return sessions, turns, project_counts
+
+
 def sync_agent_stats() -> dict:
     """
     Scan Cursor (~/.cursor/projects) and Claude Code (~/.claude/projects) transcripts
@@ -633,33 +766,22 @@ def sync_agent_stats() -> dict:
     now   = datetime.datetime.utcnow()
     start = datetime.datetime(now.year, now.month, 1)
 
-    project_counts: dict[str, int] = {}
-    sessions_this_month = 0
-    turns_this_month    = 0
+    cursor_pattern = os.path.join(CURSOR_PROJECTS_DIR, "*", "agent-transcripts", "**", "*.jsonl")
+    claude_pattern = os.path.join(CLAUDE_CODE_PROJECTS_DIR, "*", "*.jsonl")
 
-    sources = [
-        # (glob_pattern, base_dir, is_claude_code)
-        (os.path.join(CURSOR_PROJECTS_DIR, "*", "agent-transcripts", "**", "*.jsonl"), CURSOR_PROJECTS_DIR, False),
-        (os.path.join(CLAUDE_CODE_PROJECTS_DIR, "*", "*.jsonl"), CLAUDE_CODE_PROJECTS_DIR, True),
-    ]
+    cursor_sessions, cursor_turns, cursor_projects = _scan_agent_transcripts(
+        cursor_pattern, CURSOR_PROJECTS_DIR, False, start,
+    )
+    claude_sessions, claude_turns, claude_projects = _scan_agent_transcripts(
+        claude_pattern, CLAUDE_CODE_PROJECTS_DIR, True, start,
+    )
 
-    for pattern, base_dir, is_claude_code in sources:
-        for path in glob.glob(pattern, recursive=True):
-            try:
-                mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
-            except OSError:
-                continue
-            if mtime < start:
-                continue
+    sessions_this_month = cursor_sessions + claude_sessions
+    turns_this_month    = cursor_turns + claude_turns
 
-            sessions_this_month += 1
-
-            parts = path.replace(base_dir, "").lstrip("/").split("/")
-            project_name = _project_name_from_encoded(parts[0] if parts else "")
-            if project_name:
-                project_counts[project_name] = project_counts.get(project_name, 0) + 1
-
-            turns_this_month += _count_user_prompts(path, is_claude_code)
+    project_counts = dict(cursor_projects)
+    for name, count in claude_projects.items():
+        project_counts[name] = project_counts.get(name, 0) + count
 
     top_project = max(project_counts, key=lambda k: project_counts[k], default="")
     avg_turns   = round(turns_this_month / sessions_this_month, 1) if sessions_this_month else 0
@@ -676,7 +798,10 @@ def sync_agent_stats() -> dict:
 def main():
     acquire_lock()
     print(f"⟳  activity sync — {datetime.datetime.now().strftime('%b %-d %H:%M')}")
-    print(f"   API: {API_BASE}")
+    api_note = f"local: {LOCAL_API}"
+    if LIVE_API and LIVE_API != LOCAL_API:
+        api_note += f" · live: {LIVE_API}"
+    print(f"   {api_note}")
 
     state = load_state()
 
@@ -711,11 +836,13 @@ def main():
     # ── Agent stats ──────────────────────────────────────────────────────────
     print("\n[5/5] agent stats…")
     agent_stats = sync_agent_stats()
+    agent_stats["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    write_local_json("agent-stats", [agent_stats])
     res = post_json("/api/agent-stats", agent_stats)
     ok = "✓" if res.get("ok") else "–"
     print(
         f"  {ok} {agent_stats['sessions_this_month']} sessions, "
-        f"{agent_stats['turns_this_month']} turns this month"
+        f"{agent_stats['turns_this_month']} prompts this month"
         + (f" (top: {agent_stats['top_project']})" if agent_stats['top_project'] else "")
     )
 
@@ -768,7 +895,7 @@ if __name__ == "__main__":
         }
         body    = json.dumps(payload).encode()
         req_obj = urllib.request.Request(
-            f"{API_BASE}/api/deploys?manual=1", data=body, method="POST"
+            f"{LIVE_API or LOCAL_API}/api/deploys?manual=1", data=body, method="POST"
         )
         req_obj.add_header("Content-Type", "application/json")
         req_obj.add_header("Authorization", f"Bearer {SECRET}")

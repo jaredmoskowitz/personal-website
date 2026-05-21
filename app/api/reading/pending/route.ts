@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isLocalAdminContext } from '@/lib/is-local';
 import { getData, setData } from '@/lib/storage';
 
 const SECRET = process.env.READING_SECRET;
 
 function isAuthorized(req: NextRequest): boolean {
-  const host = req.headers.get('host') ?? '';
-  if (host.startsWith('localhost:') || host === 'localhost') return true;
+  if (isLocalAdminContext(req)) return true;
   const auth = req.headers.get('authorization');
   return !!SECRET && auth === `Bearer ${SECRET}`;
 }

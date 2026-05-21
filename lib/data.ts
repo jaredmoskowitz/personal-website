@@ -66,8 +66,8 @@ export const JARED = {
     {
       name:  "Sesh",
       tag:   "AI-native music library management for A&Rs and music managers.",
-      desc:  "React Native (Expo) + Next.js monorepo. Supabase backend with RLS, 14 tables, fractional indexing for drag-and-drop. Cloudflare R2 storage. AI chat powered by Gemini 2.5 Flash with tool-calling architecture — findSongs, createPlaylist — so the model operates directly on the user's library. Tier-gated subscriptions. Live on App Store and web.",
-      stack: ["React Native", "Expo", "Next.js", "TypeScript", "Supabase", "Gemini API", "Cursor", "Turborepo"],
+      desc:  "React Native (Expo) + Next.js monorepo. Supabase backend with RLS, 14 tables, fractional indexing for drag-and-drop. Cloudflare R2 storage. AI chat powered by Gemini 2.5 Flash with RAG over the library and tool-calling — findSongs, createPlaylist — so the model operates directly on the user's catalog. Tier-gated subscriptions. Live on App Store and web.",
+      stack: ["React Native", "Expo", "Next.js", "TypeScript", "Supabase", "RAG", "Gemini API", "Cursor", "Turborepo"],
       links: [{ label: "App Store", url: "https://seshapp.live/" }, { label: "Site", url: "https://seshapp.live/" }],
       year:  "2026",
     },
