@@ -13,7 +13,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: 'light',
   scheme: 'amber',
   toggleTheme: () => {},
   setScheme: () => {},
@@ -24,7 +24,7 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [scheme, setSchemeState] = useState<SchemeId>('amber');
 
   // Apply to html element

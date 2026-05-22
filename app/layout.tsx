@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scheme="amber" data-theme="dark" className={jetBrainsMono.variable}>
+    <html lang="en" data-scheme="amber" data-theme="light" className={jetBrainsMono.variable}>
       <head>
         {/* Prevent flash of wrong theme by reading localStorage before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `
