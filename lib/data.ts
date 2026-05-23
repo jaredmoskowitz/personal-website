@@ -212,5 +212,5 @@ export const EE_RESPONSES: Record<string, string[]> = {
   whoami: ["$ whoami", "> visitor — welcome.", "> tell me what you're building →", "> jared@jaredmoskowitz.com"],
   sudo:   ["$ sudo",   "> permission denied. (not your machine.)"],
   vim:    ["$ vim",    "> :q to exit. (you'd have to close the tab.)"],
-  ls:     ["$ ls ~",   "> whoami  work  shipped  stack  now  ping"],
+  ls:     ["$ ls ~",   "> whoami  shipped  work  stack  now  ping"],
 };

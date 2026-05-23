@@ -35,8 +35,8 @@ function buildIndex(): Item[] {
 
   [
     { id: 'tm-now',        label: 'Activity',  sub: 'live commits, reading, activity', kw: 'now activity live feed' },
-    { id: 'tm-experience', label: 'Work',      sub: 'Hinge · Amazon · Microsoft',      kw: 'work experience job' },
     { id: 'tm-projects',   label: 'Projects',  sub: 'shipped + in-flight',             kw: 'projects shipped' },
+    { id: 'tm-experience', label: 'Work',      sub: 'Hinge · Amazon · Microsoft',      kw: 'work experience job' },
     { id: 'tm-skills',     label: 'Stack',     sub: 'Mobile · Web · AI · Tools',       kw: 'stack skills tech' },
     { id: 'tm-contact',    label: 'Contact',   sub: J.email,                           kw: 'contact ping email' },
     { id: 'tm-intro',      label: 'Top',       sub: 'back to whoami',                  kw: 'top home whoami' },

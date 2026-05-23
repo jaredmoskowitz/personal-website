@@ -371,6 +371,9 @@ def is_article(url: str, raw_title: str) -> bool:
         return True
     if hostname.endswith(".substack.com") and "/p/" in path:
         return True
+    # Substack on a custom domain (and similar /p/<slug> blog platforms)
+    if re.search(r"^/p/[a-z0-9][a-z0-9-]{8,}", path, re.IGNORECASE):
+        return True
     article_path_indicators = (
         "/blog/", "/posts/", "/post/", "/articles/", "/article/",
         "/essay/", "/writing/", "/notes/", "/thoughts/",
